@@ -1,3 +1,4 @@
+import json
 from Classes.player import Player
 from Classes.redEnemy import RedEnemy
 from Classes.regularEnemy import RegularEnemy
@@ -6,7 +7,6 @@ from Classes.superBombardier import SuperBombardier
 import constants
 import pyxel
 from random import randint
-
 
 class Board:
     """Class that stores the board, the main game elements and some global variables of the game like the game state
@@ -44,7 +44,7 @@ class Board:
     def __init__(self):
         self.player = Player(self.width/2-8, self.height - 40)
         self.enemies = []
-        self.high_score = 0
+        self.high_score = self.__load_high_score()
         self.bg_offset = 0
         self.game_state = "start_screen"
         self.island_position_x = 30
@@ -69,6 +69,7 @@ class Board:
                 "The high score can be only an integer and greater than or equal to 0")
         else:
             self.__high_score = value
+            self.__save_high_score(value)
 
     @property
     def game_state(self):
@@ -104,7 +105,7 @@ class Board:
     def island_position_x(self, value):
         if type(value) != int and type(value) != float:
             raise TypeError(
-                "The island position y can be only an integer or a float")
+                "The island position x can be only an integer or a float")
         else:
             self.__island_position_x = value
 
@@ -141,12 +142,12 @@ class Board:
             self.bg_offset += self.player.speed * constants.DELTA_TIME / 5
             if self.bg_offset > 16:
                 self.bg_offset = 0
-                
+
     def draw(self):
         """Draws all the elements in the game. Runs the corresponding draw function depending on the game state"""
         if self.game_state == "start_screen":
             self.__draw_start_screen()
-            
+
         elif self.game_state == "game":
             self.__draw_game_screen()
 
@@ -291,3 +292,17 @@ class Board:
             return color
         else:
             return 0
+
+    def __load_high_score(self):
+        """Loads the high score from a JSON file. Returns 0 if the file doesn't exist or is invalid."""
+        try:
+            with open("high_score.json", "r") as file:
+                data = json.load(file)
+                return data.get("high_score", 0)
+        except (FileNotFoundError, json.JSONDecodeError):
+            return 0
+
+    def __save_high_score(self, value):
+        """Saves the high score to a JSON file."""
+        with open("high_score.json", "w") as file:
+            json.dump({"high_score": value}, file)
